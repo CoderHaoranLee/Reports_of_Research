@@ -36,6 +36,7 @@ voxel划分好了,下一步就是要提取每个voxel的特征。每个voxel的�
 
 ## 损失函数
 RPN的预测值是相对于预选框（anchor）的残差值，每个像素点预测7个值，其定义如下：
+
 \[
 \Delta x = \frac{x^g_c - x^a_c}{d^a},
 \Delta y = \frac{y^g_c - y^a_c}{d^a},
@@ -45,8 +46,11 @@ RPN的预测值是相对于预选框（anchor）的残差值，每个像素点�
 \Delta h = log(\frac{h^g}{h^a}) \\
 \Delta \theta = \theta ^g - \theta ^a
 \]
+
 其中 $d^a = \sqrt {(l^a)^2+(w^a)^2}$ 是预选框对角线长度。则损失函数的定义为：
+
 \[
 L = \alpha \frac{1}{N_{pos}} \sum_i L_{cls}(p^{pos}_i, 1) + \beta \frac{1}{N_{neg}} \sum_j L_{cls}(p^{neg}_j, 0) \\+ \frac{1}{N_{pos}} \sum_i L_{reg}(u_i, u^g_i)
 \]
+
 其中分类损失采用两类交叉熵损失，回归损失采用SmoothL1损失。$\alpha,\beta$是衡量正负样本不均衡的权重。
