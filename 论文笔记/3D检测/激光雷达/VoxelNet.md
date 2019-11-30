@@ -41,11 +41,11 @@ RPN的预测值是相对于预选框（anchor）的残差值，每个像素点�
 \Delta y = \frac{y^g_c - y^a_c}{d^a},
 \Delta z = \frac{z^g_c - z^a_c}{h^a} \\
 \Delta l = log(\frac{l^g}{l^a}),
-\Delta w = log(\frac{w^g}{w^a}), 
+\Delta w = log(\frac{w^g}{w^a}),
 \Delta h = log(\frac{h^g}{h^a}) \\
 \Delta \theta = \theta ^g - \theta ^a
 \]
-其中$d^a = sqrt((l^a)^2+(w^a)^2)$是预选框对角线长度。则损失函数的定义为：
+其中 $d^a = \sqrt {(l^a)^2+(w^a)^2}$ 是预选框对角线长度。则损失函数的定义为：
 \[
 L = \alpha \frac{1}{N_{pos}} \sum_i L_{cls}(p^{pos}_i, 1) + \beta \frac{1}{N_{neg}} \sum_j L_{cls}(p^{neg}_j, 0) \\+ \frac{1}{N_{pos}} \sum_i L_{reg}(u_i, u^g_i)
 \]
