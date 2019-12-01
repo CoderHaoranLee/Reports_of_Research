@@ -115,5 +115,5 @@ $l^a=0.8,w^a=0.6,h^a=1.73, z^a_c=-0.6, \theta={0,90}$。
 <img alt="VoxelNet-17a5c7c3.png" src="assets/VoxelNet-17a5c7c3.png" width="" height="" >
 实验结果中HC-baseline是采用hand-crafted特征作为输入，将对应3D卷积的部分改成2D的，效果看起来要比MV3D的效果要好。输入是采用16个高度channel，分辨率为0.1。
 
-2D Middle Layers
+2D Middle Layers:
 Conv2D(16, 32, 3, 1, 1) -> Conv2D(32, 64, 3, 2, 1) -> Conv2D(64, 128, 3, 1, 1)
