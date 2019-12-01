@@ -123,3 +123,5 @@ L_{\theta} = SmoothL1(\sin(\theta_p - \theta_t))
 <img alt="SECOND-96d9ecf1.png" src="assets/SECOND-96d9ecf1.png" width="" height="" >
 
 <img alt="SECOND-4e74849f.png" src="assets/SECOND-4e74849f.png" width="" height="" >
+
+实验中有个疑问，这种角度回归方法的比较直比较了向量形式的回归，并没有比较VoxelNet那种角度回归，因此无法得知作者提出的这种角度回归方法的增益情况。
