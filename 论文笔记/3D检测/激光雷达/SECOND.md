@@ -15,26 +15,37 @@
 ### Sparse Convolution Middle Extractor
 这部分的理解关键在于理解sparse convolution。
 根据文中的表述，常用的2D稠密卷积可以表示为
+
 \[
 Y_{x,y,m} = \sum_{u,v \in P(x,y)} \sum_l W_{u-u_0, v-v_0, l, m}D_{u,v,l}
 \]
+
 其中W表示权重，D表示输入图像， $x,y$表示输出位置，$u-u_0, v-v_0$表示在卷积核中的相对位置。而通用矩阵乘法（GEMM: general matrix multiplication）的表示方式为：
+
 \[
 Y_{x,y,m} = \sum_l W_{*, l, m} D_{p(x,y), l}
 \]
+
 其中 $W_{*, l, m}$ 代表前面的 $W_{u-u_0, v-v_0, l, m}$ ,2D卷积的形式可以拉长成1D的形式。对于稀疏数据 $D_{i,l}$ 以及对应的输出相应$Y_{j,m}$，计算方式可以写成如下格式
+
 \[
 Y_{j,m} = \sum_{i \in P(j)} \sum_l W_{k,l,m} D_{i,l}
 \]
+
 其中，$l$ 表示特征维度，对于输出位置$j$，需要找到原图中的邻域$p(j)$，以及权重张量中对应的位置$k$所存储的向量，将其对应相乘，并从特征维度进行相加。该公式对应的GEMM形式为：
+
 \[
 Y_{j,m} = \sum_l W_{*,l,m}D_{p(j),l}
 \]
+
 这里的 $D_{p(j),l}$ 仍然包含很多0值（为什么*），为了解决这个问题，从上上面公式到上面公式的过程中，稍微改写一下：
+
 \[
 Y_{j,m} = \sum_k \sum_l W_{k,l,m} D_{R_{k,j}, k, l}
 \]
+
 其中 $R_{k,j}$ 做了一件事是对最后每个输出位置，都找到$k$个邻域，最后将这个个邻域里的向量进行相加，这个东西这里被叫做Rule。这个公式其实和上上面那个公式的形式非常像，只不过是多了个Rule。这个Rule对原来的D进行了分解，使其丢掉了0值，从而计算效率更高。Rule的维度为 $K \times N_{in} \times 2$，$K$ 是表示 $K$ 个卷积核， $N_{in}$ 表示输入特征的个数， $2$ 表示输入和输出的索引。例如 $R[:, :, 0]$ 是存储的用于收集非0特征的输入索引，$R[:,:,1]$ 是存储用于将处理后的特征分配到“原始”位置的输出索引。
+
 整个的计算过程如下图所示：
 
 <img alt="SECOND-ff604011.png" src="assets/SECOND-ff604011.png" width="" height="" >
@@ -44,17 +55,20 @@ Y_{j,m} = \sum_k \sum_l W_{k,l,m} D_{R_{k,j}, k, l}
 首先根据 $Rule[i, :, 0]$ 的输入索引收集输入特征中的非空特征，和对应的坐标。接着进行GEMM操作，具体过程是找的卷积核中对应的 $W_{i, :, :}$ 维度为 $C_{in} \times C_{out}$ 与收集的每个特征进行矩阵乘法，于此同时将所有Rule收集到的输入索引和坐标安装顺序排列起来，并去除重复的索引和坐标。排列后的索引为每个坐标对应的输出索引。之后，每个 $Rule[i, :, :]$ 根据坐标找的其对应的输出索引，并用该索引将GEMM之后的特征恢复到 $N_{out} \times C_{out}$ 的维度。总共有 $K$ 个Rule，则会生成 $K$ 个 $N_{out} \times C_{out}$ 的特征，将这些特征对位相加（对应于公式中的 $\sum_k$）得到最后的特征，如果要恢复到原始2D的形式，可以根据Output coordinates进行恢复。
 
 Rule生成过程如下图所示
+
 <img alt="SECOND-69cc5fff.png" src="assets/SECOND-69cc5fff.png" width="" height="" >
 
 第一个循环是为了获取输入的索引和输出的空间位置索引。第一个循环里面的 $P_{outs}$ 其实是 $P_{in}$ 的邻域。这一步过程中由于不同位置可能会有相同的邻域，所以相同的输出位置会在不同的Rule里出现，导致了输出位置的复制，因此接下来需要根据空间索引（SpatialIndex）挑选出唯一的位置。这样在根据空间索引恢复2D特征时不会出现歧义性。然后将这个空间索引集合所映射的新的输出索引值赋给Rule中的输出索引位置。
 
 最后稀疏卷积构成的中层特征提取器如下图所示：
+
 <img alt="SECOND-fa353757.png" src="assets/SECOND-fa353757.png" width="" height="" >
 
 其中黄色表示sparse convolution，白色表示submanifold convolution，红色表示sparse-to-dense（根据输出坐标）。
 
 ### RPN
 RPN的结构如下图所示
+
 <img alt="SECOND-bc7e08e5.png" src="assets/SECOND-bc7e08e5.png" width="" height="" >
 
 其中 $Conv2D(c_{out}, k, s)$ 表示Conv2D-BatchNorm-ReLU，$DeConv2D(c_{out}, k, s)$ 表示DeConv2D-BatchNorm-ReLU，$c_{out}$表示输出维度，$k, s$分别表示卷积核尺寸和步长，所有的Conv2D层都是采用same padding。整个RPN可以分成4个阶段：
